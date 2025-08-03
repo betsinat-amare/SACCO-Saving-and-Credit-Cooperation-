@@ -149,5 +149,60 @@ class ApiService {
     );
   }
 
+  static Future<http.Response> getAllMembers(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/all-members'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  static Future<http.Response> addPayment(
+    String userId,
+    double amount,
+    DateTime date,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/payments'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'userId': userId,
+        'amount': amount,
+        'date': date.toIso8601String(),
+      }),
+    );
+  }
+
+  static Future<http.Response> getPayments(String userId, String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/payments/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  static Future<http.Response> getPendingPayments(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/pending-payments'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  static Future<http.Response> approvePayment(
+    String paymentId,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/approve-payment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'paymentId': paymentId}),
+    );
+  }
+
   // Add more endpoints as needed (admin approvals, etc.)
 }

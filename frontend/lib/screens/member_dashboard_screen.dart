@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../models/savings.dart';
 import '../models/credit.dart';
+import '../models/payment.dart';
 import '../models/stats.dart';
 
 class MemberDashboardScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   String? _error;
   List<Savings> _savings = [];
   List<Credit> _credits = [];
+  List<Payment> _payments = [];
   CooperativeStats? _stats;
 
   @override
@@ -43,6 +45,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                 .toList() ??
             [];
       }
+
       final cRes = await ApiService.getCredits(auth.user!.id, auth.token!);
       if (cRes.statusCode == 200) {
         final cData = jsonDecode(cRes.body);
@@ -52,6 +55,17 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                 .toList() ??
             [];
       }
+
+      final pRes = await ApiService.getPayments(auth.user!.id, auth.token!);
+      if (pRes.statusCode == 200) {
+        final pData = jsonDecode(pRes.body);
+        _payments =
+            (pData['payments'] as List?)
+                ?.map((e) => Payment.fromJson(e))
+                .toList() ??
+            [];
+      }
+
       final statsRes = await ApiService.getStats(auth.token!);
       if (statsRes.statusCode == 200) {
         final statsData = jsonDecode(statsRes.body);
@@ -297,6 +311,122 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     }
   }
 
+  Future<void> _addPayment() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final amountController = TextEditingController();
+    final dateController = TextEditingController();
+    dateController.text = DateTime.now().toIso8601String().split('T')[0];
+
+    String? errorText;
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Payment'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '\$',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: dateController,
+                    decoration: const InputDecoration(
+                      labelText: 'Date',
+                      helperText: 'YYYY-MM-DD',
+                    ),
+                  ),
+                  if (errorText != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        errorText!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(null),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final amountText = amountController.text.trim();
+                    final dateText = dateController.text.trim();
+                    final isAmountValid =
+                        amountText.isNotEmpty &&
+                        double.tryParse(amountText) != null;
+                    final isDateValid =
+                        dateText.isNotEmpty &&
+                        DateTime.tryParse(dateText) != null;
+                    if (isAmountValid && isDateValid) {
+                      Navigator.of(
+                        context,
+                      ).pop({'amount': amountText, 'date': dateText});
+                    } else {
+                      setState(() {
+                        errorText = 'Please enter a valid amount and date';
+                      });
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      try {
+        final amount = double.parse(result['amount']);
+        final date = DateTime.parse(result['date']);
+        final response = await ApiService.addPayment(
+          auth.user!.id,
+          amount,
+          date,
+          auth.token!,
+        );
+
+        if (response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Payment added successfully! Pending admin approval.',
+              ),
+            ),
+          );
+          _fetchAll();
+        } else {
+          final errorData = jsonDecode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error: ${errorData['error'] ?? 'Failed to add payment'}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Invalid amount or date format')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalSavings = _savings
@@ -305,8 +435,16 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     final totalCredits = _credits
         .where((c) => c.status == 'approved')
         .fold<double>(0, (sum, c) => sum + c.amount);
+    final totalRemainingDebt = _credits
+        .where((c) => c.status == 'approved')
+        .fold<double>(0, (sum, c) => sum + c.remainingDebt);
+    final totalPaidPayments = _payments
+        .where((p) => p.status == 'approved')
+        .fold<double>(0, (sum, p) => sum + p.amount);
     final pendingSavings = _savings.where((s) => s.status == 'pending').length;
     final pendingCredits = _credits.where((c) => c.status == 'pending').length;
+    final pendingPayments =
+        _payments.where((p) => p.status == 'pending').length;
     final netBalance = totalSavings - totalCredits;
 
     return Scaffold(
@@ -437,6 +575,69 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
 
                     const SizedBox(height: 16),
 
+                    // Debt and Payment Cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'Remaining Debt',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    '\$${totalRemainingDebt.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'Total Paid',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    '\$${totalPaidPayments.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  if (pendingPayments > 0)
+                                    Text(
+                                      '$pendingPayments pending',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
                     // Net Balance Card
                     Card(
                       color:
@@ -506,6 +707,22 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                           ),
                         ),
                       ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Payment Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _addPayment,
+                        icon: const Icon(Icons.payment),
+                        label: const Text('Make Payment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 24),
@@ -605,8 +822,18 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                       : Colors.orange,
                             ),
                             title: Text('\$${c.amount.toStringAsFixed(2)}'),
-                            subtitle: Text(
-                              'Date: ${c.date.toLocal().toString().split(' ')[0]}',
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Date: ${c.date.toLocal().toString().split(' ')[0]}',
+                                ),
+                                if (c.status == 'approved')
+                                  Text(
+                                    'Remaining: \$${c.remainingDebt.toStringAsFixed(2)}',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                              ],
                             ),
                             trailing: Container(
                               padding: const EdgeInsets.symmetric(
@@ -622,6 +849,68 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                               ),
                               child: Text(
                                 c.status.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 24),
+
+                    // Payments History
+                    const Text(
+                      'Payments History',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_payments.isEmpty)
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'No payments history yet',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    else
+                      ..._payments.map(
+                        (p) => Card(
+                          child: ListTile(
+                            leading: Icon(
+                              p.status == 'approved'
+                                  ? Icons.check_circle
+                                  : Icons.pending,
+                              color:
+                                  p.status == 'approved'
+                                      ? Colors.green
+                                      : Colors.orange,
+                            ),
+                            title: Text('\$${p.amount.toStringAsFixed(2)}'),
+                            subtitle: Text(
+                              'Date: ${p.date.toLocal().toString().split(' ')[0]}',
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    p.status == 'approved'
+                                        ? Colors.green
+                                        : Colors.orange,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                p.status.toUpperCase(),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,

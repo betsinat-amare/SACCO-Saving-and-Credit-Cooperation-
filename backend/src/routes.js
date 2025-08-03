@@ -1,5 +1,5 @@
 const express = require('express');
-const { User, Savings, Credit, CooperativeStats } = require('./models');
+const { User, Savings, Credit, Payment, CooperativeStats } = require('./models');
 const { signToken, hashPassword, comparePassword } = require('./auth');
 
 const router = express.Router();
@@ -57,15 +57,47 @@ router.post('/savings', async (req, res) => {
   }
 });
 
-// Member: Add credit
+// Member: Add credit with validation
 router.post('/credits', async (req, res) => {
   const { userId, amount, date } = req.body;
   try {
-    const credit = new Credit({ user: userId, amount, date });
+    // Calculate member's total approved savings
+    const totalSavings = await Savings.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const savingsAmount = totalSavings[0]?.total || 0;
+    const maxCreditAllowed = savingsAmount * 2;
+
+    if (amount > maxCreditAllowed) {
+      return res.status(400).json({ 
+        error: 'Credit amount exceeds limit', 
+        details: `Maximum credit allowed is $${maxCreditAllowed} (2x your total savings of $${savingsAmount})` 
+      });
+    }
+
+    const credit = new Credit({ 
+      user: userId, 
+      amount, 
+      remaining_debt: amount, // Initially, remaining debt equals credit amount
+      date 
+    });
     await credit.save();
     res.status(201).json({ credit });
   } catch (err) {
     res.status(400).json({ error: 'Add credit failed', details: err.message });
+  }
+});
+
+// Member: Add payment request
+router.post('/payments', async (req, res) => {
+  const { userId, amount, date } = req.body;
+  try {
+    const payment = new Payment({ user: userId, amount, date });
+    await payment.save();
+    res.status(201).json({ payment });
+  } catch (err) {
+    res.status(400).json({ error: 'Add payment failed', details: err.message });
   }
 });
 
@@ -89,6 +121,16 @@ router.get('/credits/:userId', async (req, res) => {
   }
 });
 
+// Member: View own payments
+router.get('/payments/:userId', async (req, res) => {
+  try {
+    const payments = await Payment.find({ user: req.params.userId });
+    res.json({ payments });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch payments failed', details: err.message });
+  }
+});
+
 // Admin: Approve savings
 router.post('/admin/approve-savings', async (req, res) => {
   const { savingsId } = req.body;
@@ -101,7 +143,7 @@ router.post('/admin/approve-savings', async (req, res) => {
   }
 });
 
-// Admin: Approve credit
+// Admin: Approve credit with remaining debt tracking
 router.post('/admin/approve-credit', async (req, res) => {
   const { creditId } = req.body;
   try {
@@ -110,6 +152,34 @@ router.post('/admin/approve-credit', async (req, res) => {
     res.json({ credit });
   } catch (err) {
     res.status(500).json({ error: 'Approval failed', details: err.message });
+  }
+});
+
+// Admin: Approve payment and update remaining debt
+router.post('/admin/approve-payment', async (req, res) => {
+  const { paymentId } = req.body;
+  try {
+    const payment = await Payment.findByIdAndUpdate(paymentId, { status: 'approved' }, { new: true });
+    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+
+    // Update remaining debt for all approved credits of this user
+    const userCredits = await Credit.find({ user: payment.user, status: 'approved' });
+    let totalPaid = 0;
+    
+    // Calculate total approved payments for this user
+    const approvedPayments = await Payment.find({ user: payment.user, status: 'approved' });
+    totalPaid = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    // Update remaining debt for each credit
+    for (const credit of userCredits) {
+      const originalAmount = credit.amount;
+      const remainingDebt = Math.max(0, originalAmount - (totalPaid - (originalAmount - credit.remaining_debt)));
+      await Credit.findByIdAndUpdate(credit._id, { remaining_debt: remainingDebt });
+    }
+
+    res.json({ payment });
+  } catch (err) {
+    res.status(500).json({ error: 'Payment approval failed', details: err.message });
   }
 });
 
@@ -131,10 +201,30 @@ router.get('/admin/pending-credits', async (req, res) => {
   }
 });
 
+// Admin: View all pending payments
+router.get('/admin/pending-payments', async (req, res) => {
+  try {
+    const payments = await Payment.find({ status: 'pending' }).populate('user', 'name email');
+    res.json({ payments });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
+  }
+});
+
 // Admin: View all pending members
 router.get('/pending-members', async (req, res) => {
   try {
     const users = await User.find({ status: 'pending' });
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
+  }
+});
+
+// Admin: View all members (both pending and approved)
+router.get('/all-members', async (req, res) => {
+  try {
+    const users = await User.find({ role: 'member' });
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: 'Fetch failed', details: err.message });

@@ -20,6 +20,15 @@ const savingsSchema = new mongoose.Schema({
 const creditSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
+  remaining_debt: { type: Number, required: true }, // Track remaining debt
+  date: { type: Date, required: true },
+  status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+  created_at: { type: Date, default: Date.now },
+});
+
+const paymentSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  amount: { type: Number, required: true },
   date: { type: Date, required: true },
   status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
   created_at: { type: Date, default: Date.now },
@@ -36,6 +45,7 @@ const statsSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Savings = mongoose.model('Savings', savingsSchema);
 const Credit = mongoose.model('Credit', creditSchema);
+const Payment = mongoose.model('Payment', paymentSchema);
 const CooperativeStats = mongoose.model('CooperativeStats', statsSchema);
 
-module.exports = { User, Savings, Credit, CooperativeStats }; 
+module.exports = { User, Savings, Credit, Payment, CooperativeStats }; 
