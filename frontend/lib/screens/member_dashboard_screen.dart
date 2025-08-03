@@ -9,7 +9,7 @@ import '../models/payment.dart';
 import '../models/stats.dart';
 
 class MemberDashboardScreen extends StatefulWidget {
-  const MemberDashboardScreen({Key? key}) : super(key: key);
+  const MemberDashboardScreen({super.key});
 
   @override
   State<MemberDashboardScreen> createState() => _MemberDashboardScreenState();
@@ -393,6 +393,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       try {
         final amount = double.parse(result['amount']);
         final date = DateTime.parse(result['date']);
+        print('Payment attempt - Amount: $amount, Date: $date'); // Debug info
         final response = await ApiService.addPayment(
           auth.user!.id,
           amount,
@@ -411,6 +412,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           _fetchAll();
         } else {
           final errorData = jsonDecode(response.body);
+          print('Payment error: ${response.body}'); // Debug info
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -420,9 +422,10 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: Invalid amount or date format')),
-        );
+        print('Payment exception: $e'); // Debug info
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -445,7 +448,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     final pendingCredits = _credits.where((c) => c.status == 'pending').length;
     final pendingPayments =
         _payments.where((p) => p.status == 'pending').length;
-    final netBalance = totalSavings - totalCredits;
 
     return Scaffold(
       appBar: AppBar(
@@ -634,48 +636,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Net Balance Card
-                    Card(
-                      color:
-                          netBalance >= 0
-                              ? Colors.green.shade50
-                              : Colors.red.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Net Balance',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '\$${netBalance.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    netBalance >= 0 ? Colors.green : Colors.red,
-                              ),
-                            ),
-                            Text(
-                              netBalance >= 0 ? 'Available' : 'Owed',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    netBalance >= 0 ? Colors.green : Colors.red,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 16),
