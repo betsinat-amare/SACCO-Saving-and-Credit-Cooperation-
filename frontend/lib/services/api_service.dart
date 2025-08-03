@@ -93,12 +93,13 @@ class ApiService {
     );
   }
 
+  // Admin: Approve member
   static Future<http.Response> approveMember(
     String userId,
     String token,
   ) async {
     return await http.post(
-      Uri.parse('$baseUrl/admin/approve'),
+      Uri.parse('$baseUrl/admin/approve-member'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -107,13 +108,19 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getPendingSavings(String token) async {
-    return await http.get(
-      Uri.parse('$baseUrl/admin/pending-savings'),
-      headers: {'Authorization': 'Bearer $token'},
+  // Admin: Reject member
+  static Future<http.Response> rejectMember(String userId, String token) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/reject-member'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'userId': userId}),
     );
   }
 
+  // Admin: Approve savings
   static Future<http.Response> approveSavings(
     String savingsId,
     String token,
@@ -128,13 +135,22 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getPendingCredits(String token) async {
-    return await http.get(
-      Uri.parse('$baseUrl/admin/pending-credits'),
-      headers: {'Authorization': 'Bearer $token'},
+  // Admin: Reject savings
+  static Future<http.Response> rejectSavings(
+    String savingsId,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/reject-savings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'savingsId': savingsId}),
     );
   }
 
+  // Admin: Approve credit
   static Future<http.Response> approveCredit(
     String creditId,
     String token,
@@ -146,6 +162,99 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({'creditId': creditId}),
+    );
+  }
+
+  // Admin: Reject credit
+  static Future<http.Response> rejectCredit(
+    String creditId,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/reject-credit'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'creditId': creditId}),
+    );
+  }
+
+  // Admin: Approve payment
+  static Future<http.Response> approvePayment(
+    String paymentId,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/approve-payment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'paymentId': paymentId}),
+    );
+  }
+
+  // Admin: Reject payment
+  static Future<http.Response> rejectPayment(
+    String paymentId,
+    String token,
+  ) async {
+    return await http.post(
+      Uri.parse('$baseUrl/admin/reject-payment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'paymentId': paymentId}),
+    );
+  }
+
+  // Admin: Get all savings (pending, approved, rejected)
+  static Future<http.Response> getAllSavings(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/all-savings'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  // Admin: Get all credits (pending, approved, rejected)
+  static Future<http.Response> getAllCredits(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/all-credits'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  // Admin: Get all payments (pending, approved, rejected)
+  static Future<http.Response> getAllPayments(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/all-payments'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  // Admin: Get pending savings
+  static Future<http.Response> getPendingSavings(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/pending-savings'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  // Admin: Get pending credits
+  static Future<http.Response> getPendingCredits(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/pending-credits'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+  }
+
+  // Admin: Get pending payments
+  static Future<http.Response> getPendingPayments(String token) async {
+    return await http.get(
+      Uri.parse('$baseUrl/admin/pending-payments'),
+      headers: {'Authorization': 'Bearer $token'},
     );
   }
 
@@ -180,27 +289,6 @@ class ApiService {
     return await http.get(
       Uri.parse('$baseUrl/payments/$userId'),
       headers: {'Authorization': 'Bearer $token'},
-    );
-  }
-
-  static Future<http.Response> getPendingPayments(String token) async {
-    return await http.get(
-      Uri.parse('$baseUrl/admin/pending-payments'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-  }
-
-  static Future<http.Response> approvePayment(
-    String paymentId,
-    String token,
-  ) async {
-    return await http.post(
-      Uri.parse('$baseUrl/admin/approve-payment'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'paymentId': paymentId}),
     );
   }
 

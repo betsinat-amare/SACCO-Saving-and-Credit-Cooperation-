@@ -21,9 +21,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _loading = false;
   String? _error;
   List<User> _allMembers = [];
-  List<Savings> _pendingSavings = [];
-  List<Credit> _pendingCredits = [];
-  List<Payment> _pendingPayments = [];
+  List<Savings> _allSavings = [];
+  List<Credit> _allCredits = [];
+  List<Payment> _allPayments = [];
   CooperativeStats? _stats;
 
   @override
@@ -44,9 +44,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       // Fetch all data
       final statsRes = await ApiService.getStats(auth.token!);
       final membersRes = await ApiService.getAllMembers(auth.token!);
-      final savingsRes = await ApiService.getPendingSavings(auth.token!);
-      final creditsRes = await ApiService.getPendingCredits(auth.token!);
-      final paymentsRes = await ApiService.getPendingPayments(auth.token!);
+      final savingsRes = await ApiService.getAllSavings(auth.token!);
+      final creditsRes = await ApiService.getAllCredits(auth.token!);
+      final paymentsRes = await ApiService.getAllPayments(auth.token!);
 
       if (statsRes.statusCode == 200) {
         final statsData = jsonDecode(statsRes.body);
@@ -69,7 +69,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (savingsRes.statusCode == 200) {
         final savingsData = jsonDecode(savingsRes.body);
         setState(() {
-          _pendingSavings =
+          _allSavings =
               (savingsData['savings'] as List?)
                   ?.map((e) => Savings.fromJson(e))
                   .toList() ??
@@ -80,7 +80,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (creditsRes.statusCode == 200) {
         final creditsData = jsonDecode(creditsRes.body);
         setState(() {
-          _pendingCredits =
+          _allCredits =
               (creditsData['credits'] as List?)
                   ?.map((e) => Credit.fromJson(e))
                   .toList() ??
@@ -91,7 +91,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (paymentsRes.statusCode == 200) {
         final paymentsData = jsonDecode(paymentsRes.body);
         setState(() {
-          _pendingPayments =
+          _allPayments =
               (paymentsData['payments'] as List?)
                   ?.map((e) => Payment.fromJson(e))
                   .toList() ??
@@ -136,6 +136,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _rejectMember(String userId) async {
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final response = await ApiService.rejectMember(userId, auth.token!);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Member rejected successfully!')),
+        );
+        _fetchAll();
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: ${errorData['error'] ?? 'Failed to reject member'}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   Future<void> _approveSavings(String savingsId) async {
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -152,6 +179,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           SnackBar(
             content: Text(
               'Error: ${errorData['error'] ?? 'Failed to approve savings'}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _rejectSavings(String savingsId) async {
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final response = await ApiService.rejectSavings(savingsId, auth.token!);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Savings rejected successfully!')),
+        );
+        _fetchAll();
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: ${errorData['error'] ?? 'Failed to reject savings'}',
             ),
           ),
         );
@@ -190,6 +244,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _rejectCredit(String creditId) async {
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final response = await ApiService.rejectCredit(creditId, auth.token!);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Credit rejected successfully!')),
+        );
+        _fetchAll();
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: ${errorData['error'] ?? 'Failed to reject credit'}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   Future<void> _approvePayment(String paymentId) async {
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -206,6 +287,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           SnackBar(
             content: Text(
               'Error: ${errorData['error'] ?? 'Failed to approve payment'}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _rejectPayment(String paymentId) async {
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final response = await ApiService.rejectPayment(paymentId, auth.token!);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment rejected successfully!')),
+        );
+        _fetchAll();
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: ${errorData['error'] ?? 'Failed to reject payment'}',
             ),
           ),
         );
@@ -292,6 +400,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             color:
                                 s.status == 'approved'
                                     ? Colors.green
+                                    : s.status == 'rejected'
+                                    ? Colors.red
                                     : Colors.orange,
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -336,6 +446,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             color:
                                 c.status == 'approved'
                                     ? Colors.green
+                                    : c.status == 'rejected'
+                                    ? Colors.red
                                     : Colors.orange,
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -370,6 +482,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             color:
                                 p.status == 'approved'
                                     ? Colors.green
+                                    : p.status == 'rejected'
+                                    ? Colors.red
                                     : Colors.orange,
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -523,6 +637,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   backgroundColor:
                       member.status == 'approved'
                           ? Colors.green
+                          : member.status == 'rejected'
+                          ? Colors.red
                           : Colors.orange,
                   child: Text(
                     member.name[0].toUpperCase(),
@@ -546,6 +662,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         color:
                             member.status == 'approved'
                                 ? Colors.green
+                                : member.status == 'rejected'
+                                ? Colors.red
                                 : Colors.orange,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -557,12 +675,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                     ),
-                    if (member.status == 'pending')
+                    if (member.status == 'pending') ...[
                       IconButton(
                         icon: const Icon(Icons.check, color: Colors.green),
                         onPressed: () => _approveMember(member.id),
                         tooltip: 'Approve Member',
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () => _rejectMember(member.id),
+                        tooltip: 'Reject Member',
+                      ),
+                    ],
                   ],
                 ),
                 onTap: () => _showMemberDetails(member),
@@ -578,22 +702,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
-          'Pending Savings',
+          'All Savings Requests',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        if (_pendingSavings.isEmpty)
+        if (_allSavings.isEmpty)
           const Card(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text('No pending savings requests'),
+              child: Text('No savings requests found'),
             ),
           )
         else
-          ..._pendingSavings.map(
+          ..._allSavings.map(
             (savings) => Card(
               child: ListTile(
-                leading: const Icon(Icons.savings, color: Colors.green),
+                leading: Icon(
+                  Icons.savings,
+                  color:
+                      savings.status == 'approved'
+                          ? Colors.green
+                          : savings.status == 'rejected'
+                          ? Colors.red
+                          : Colors.orange,
+                ),
                 title: Text('\$${savings.amount.toStringAsFixed(2)}'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,13 +736,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ],
                 ),
-                trailing: ElevatedButton(
-                  onPressed: () => _approveSavings(savings.id),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Approve'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            savings.status == 'approved'
+                                ? Colors.green
+                                : savings.status == 'rejected'
+                                ? Colors.red
+                                : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        savings.status.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    if (savings.status == 'pending') ...[
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green),
+                        onPressed: () => _approveSavings(savings.id),
+                        tooltip: 'Approve Savings',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () => _rejectSavings(savings.id),
+                        tooltip: 'Reject Savings',
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -624,22 +787,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
-          'Pending Credits',
+          'All Credit Requests',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        if (_pendingCredits.isEmpty)
+        if (_allCredits.isEmpty)
           const Card(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text('No pending credit requests'),
+              child: Text('No credit requests found'),
             ),
           )
         else
-          ..._pendingCredits.map(
+          ..._allCredits.map(
             (credit) => Card(
               child: ListTile(
-                leading: const Icon(Icons.credit_card, color: Colors.red),
+                leading: Icon(
+                  Icons.credit_card,
+                  color:
+                      credit.status == 'approved'
+                          ? Colors.green
+                          : credit.status == 'rejected'
+                          ? Colors.red
+                          : Colors.orange,
+                ),
                 title: Text('\$${credit.amount.toStringAsFixed(2)}'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,15 +819,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Text(
                       'Date: ${credit.date.toLocal().toString().split(' ')[0]}',
                     ),
+                    if (credit.status == 'approved')
+                      Text(
+                        'Remaining: \$${credit.remainingDebt.toStringAsFixed(2)}',
+                        style: const TextStyle(color: Colors.red),
+                      ),
                   ],
                 ),
-                trailing: ElevatedButton(
-                  onPressed: () => _approveCredit(credit.id),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Approve'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            credit.status == 'approved'
+                                ? Colors.green
+                                : credit.status == 'rejected'
+                                ? Colors.red
+                                : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        credit.status.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    if (credit.status == 'pending') ...[
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green),
+                        onPressed: () => _approveCredit(credit.id),
+                        tooltip: 'Approve Credit',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () => _rejectCredit(credit.id),
+                        tooltip: 'Reject Credit',
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -670,22 +877,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
-          'Pending Payments',
+          'All Payment Requests',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        if (_pendingPayments.isEmpty)
+        if (_allPayments.isEmpty)
           const Card(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text('No pending payment requests'),
+              child: Text('No payment requests found'),
             ),
           )
         else
-          ..._pendingPayments.map(
+          ..._allPayments.map(
             (payment) => Card(
               child: ListTile(
-                leading: const Icon(Icons.payment, color: Colors.blue),
+                leading: Icon(
+                  Icons.payment,
+                  color:
+                      payment.status == 'approved'
+                          ? Colors.green
+                          : payment.status == 'rejected'
+                          ? Colors.red
+                          : Colors.orange,
+                ),
                 title: Text('\$${payment.amount.toStringAsFixed(2)}'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,13 +911,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ],
                 ),
-                trailing: ElevatedButton(
-                  onPressed: () => _approvePayment(payment.id),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Approve'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            payment.status == 'approved'
+                                ? Colors.green
+                                : payment.status == 'rejected'
+                                ? Colors.red
+                                : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        payment.status.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    if (payment.status == 'pending') ...[
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green),
+                        onPressed: () => _approvePayment(payment.id),
+                        tooltip: 'Approve Payment',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () => _rejectPayment(payment.id),
+                        tooltip: 'Reject Payment',
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),

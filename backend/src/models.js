@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
-  status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   created_at: { type: Date, default: Date.now },
 });
 
@@ -13,7 +13,7 @@ const savingsSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
   date: { type: Date, required: true },
-  status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   created_at: { type: Date, default: Date.now },
 });
 
@@ -22,7 +22,7 @@ const creditSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   remaining_debt: { type: Number, required: true }, // Track remaining debt
   date: { type: Date, required: true },
-  status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   created_at: { type: Date, default: Date.now },
 });
 
@@ -30,7 +30,7 @@ const paymentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
   date: { type: Date, required: true },
-  status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   created_at: { type: Date, default: Date.now },
 });
 

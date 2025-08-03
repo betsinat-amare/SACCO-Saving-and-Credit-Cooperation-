@@ -34,14 +34,26 @@ router.post('/login', async (req, res) => {
 });
 
 // Admin: Approve member
-router.post('/admin/approve', async (req, res) => {
+router.post('/admin/approve-member', async (req, res) => {
   const { userId } = req.body;
   try {
     const user = await User.findByIdAndUpdate(userId, { status: 'approved' }, { new: true });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: { id: user._id, name: user.name, email: user.email, status: user.status } });
+    res.json({ user });
   } catch (err) {
     res.status(500).json({ error: 'Approval failed', details: err.message });
+  }
+});
+
+// Admin: Reject member
+router.post('/admin/reject-member', async (req, res) => {
+  const { userId } = req.body;
+  try {
+    const user = await User.findByIdAndUpdate(userId, { status: 'rejected' }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: 'Rejection failed', details: err.message });
   }
 });
 
@@ -143,7 +155,19 @@ router.post('/admin/approve-savings', async (req, res) => {
   }
 });
 
-// Admin: Approve credit with remaining debt tracking
+// Admin: Reject savings
+router.post('/admin/reject-savings', async (req, res) => {
+  const { savingsId } = req.body;
+  try {
+    const savings = await Savings.findByIdAndUpdate(savingsId, { status: 'rejected' }, { new: true });
+    if (!savings) return res.status(404).json({ error: 'Savings not found' });
+    res.json({ savings });
+  } catch (err) {
+    res.status(500).json({ error: 'Rejection failed', details: err.message });
+  }
+});
+
+// Admin: Approve credit
 router.post('/admin/approve-credit', async (req, res) => {
   const { creditId } = req.body;
   try {
@@ -152,6 +176,18 @@ router.post('/admin/approve-credit', async (req, res) => {
     res.json({ credit });
   } catch (err) {
     res.status(500).json({ error: 'Approval failed', details: err.message });
+  }
+});
+
+// Admin: Reject credit
+router.post('/admin/reject-credit', async (req, res) => {
+  const { creditId } = req.body;
+  try {
+    const credit = await Credit.findByIdAndUpdate(creditId, { status: 'rejected' }, { new: true });
+    if (!credit) return res.status(404).json({ error: 'Credit not found' });
+    res.json({ credit });
+  } catch (err) {
+    res.status(500).json({ error: 'Rejection failed', details: err.message });
   }
 });
 
@@ -180,6 +216,48 @@ router.post('/admin/approve-payment', async (req, res) => {
     res.json({ payment });
   } catch (err) {
     res.status(500).json({ error: 'Payment approval failed', details: err.message });
+  }
+});
+
+// Admin: Reject payment
+router.post('/admin/reject-payment', async (req, res) => {
+  const { paymentId } = req.body;
+  try {
+    const payment = await Payment.findByIdAndUpdate(paymentId, { status: 'rejected' }, { new: true });
+    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    res.json({ payment });
+  } catch (err) {
+    res.status(500).json({ error: 'Payment rejection failed', details: err.message });
+  }
+});
+
+// Admin: View all savings (pending, approved, rejected)
+router.get('/admin/all-savings', async (req, res) => {
+  try {
+    const savings = await Savings.find().populate('user', 'name email');
+    res.json({ savings });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
+  }
+});
+
+// Admin: View all credits (pending, approved, rejected)
+router.get('/admin/all-credits', async (req, res) => {
+  try {
+    const credits = await Credit.find().populate('user', 'name email');
+    res.json({ credits });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
+  }
+});
+
+// Admin: View all payments (pending, approved, rejected)
+router.get('/admin/all-payments', async (req, res) => {
+  try {
+    const payments = await Payment.find().populate('user', 'name email');
+    res.json({ payments });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
   }
 });
 
