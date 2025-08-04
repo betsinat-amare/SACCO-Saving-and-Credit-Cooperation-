@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -16,6 +16,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _password = '';
   String _confirmPassword = '';
   bool _registered = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -62,10 +64,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       : null,
                         ),
                         TextFormField(
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                           ),
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           onChanged: (val) => _password = val,
                           validator:
                               (val) =>
@@ -74,10 +88,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       : null,
                         ),
                         TextFormField(
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Confirm Password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
+                            ),
                           ),
-                          obscureText: true,
+                          obscureText: _obscureConfirmPassword,
                           onChanged: (val) => _confirmPassword = val,
                           validator:
                               (val) =>

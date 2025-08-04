@@ -3,7 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static String baseUrl = dotenv.env['API_URL'] ?? 'http://10.0.2.2:5000/api';
+  // For physical device testing, use your PC's IP address
+  // For emulator testing, use 10.0.2.2
+  static String baseUrl =
+      dotenv.env['API_URL'] ?? 'http://192.168.1.7:5000/api';
 
   static Future<http.Response> register(
     String name,

@@ -4,7 +4,7 @@ import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +37,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           val == null || val.isEmpty ? 'Enter email' : null,
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
                   onChanged: (val) => _password = val,
                   validator:
                       (val) =>

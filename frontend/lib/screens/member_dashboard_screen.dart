@@ -101,7 +101,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     controller: amountController,
                     decoration: const InputDecoration(
                       labelText: 'Amount',
-                      prefixText: '\$',
+                      prefixText: 'Birr ',
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -217,7 +217,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     controller: amountController,
                     decoration: const InputDecoration(
                       labelText: 'Amount',
-                      prefixText: '\$',
+                      prefixText: 'Birr ',
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -333,7 +333,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     controller: amountController,
                     decoration: const InputDecoration(
                       labelText: 'Amount',
-                      prefixText: '\$',
+                      prefixText: 'Birr ',
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -526,7 +526,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                     style: TextStyle(fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${totalSavings.toStringAsFixed(2)}',
+                                    '${totalSavings.toStringAsFixed(2)} Birr',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -558,7 +558,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                     style: TextStyle(fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${totalCredits.toStringAsFixed(2)}',
+                                    '${totalCredits.toStringAsFixed(2)} Birr',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -597,7 +597,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                     style: TextStyle(fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${totalRemainingDebt.toStringAsFixed(2)}',
+                                    '${totalRemainingDebt.toStringAsFixed(2)} Birr',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -621,7 +621,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                     style: TextStyle(fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${totalPaidPayments.toStringAsFixed(2)}',
+                                    '${totalPaidPayments.toStringAsFixed(2)} Birr',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -729,7 +729,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                       ? Colors.red
                                       : Colors.orange,
                             ),
-                            title: Text('\$${s.amount.toStringAsFixed(2)}'),
+                            title: Text('${s.amount.toStringAsFixed(2)} Birr'),
                             subtitle: Text(
                               'Date: ${s.date.toLocal().toString().split(' ')[0]}',
                             ),
@@ -797,7 +797,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                       ? Colors.red
                                       : Colors.orange,
                             ),
-                            title: Text('\$${c.amount.toStringAsFixed(2)}'),
+                            title: Text('${c.amount.toStringAsFixed(2)} Birr'),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -806,7 +806,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                 ),
                                 if (c.status == 'approved')
                                   Text(
-                                    'Remaining: \$${c.remainingDebt.toStringAsFixed(2)}',
+                                    'Remaining: ${c.remainingDebt.toStringAsFixed(2)} Birr',
                                     style: const TextStyle(color: Colors.red),
                                   ),
                               ],
@@ -875,7 +875,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                       ? Colors.red
                                       : Colors.orange,
                             ),
-                            title: Text('\$${p.amount.toStringAsFixed(2)}'),
+                            title: Text('${p.amount.toStringAsFixed(2)} Birr'),
                             subtitle: Text(
                               'Date: ${p.date.toLocal().toString().split(' ')[0]}',
                             ),

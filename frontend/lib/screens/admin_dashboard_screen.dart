@@ -387,7 +387,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ...memberSavings.map(
                       (s) => ListTile(
                         dense: true,
-                        title: Text('\$${s.amount.toStringAsFixed(2)}'),
+                                                    title: Text('${s.amount.toStringAsFixed(2)} Birr'),
                         subtitle: Text(
                           'Date: ${s.date.toLocal().toString().split(' ')[0]}',
                         ),
@@ -423,7 +423,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ...memberCredits.map(
                       (c) => ListTile(
                         dense: true,
-                        title: Text('\$${c.amount.toStringAsFixed(2)}'),
+                                                    title: Text('${c.amount.toStringAsFixed(2)} Birr'),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -432,7 +432,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             ),
                             if (c.status == 'approved')
                               Text(
-                                'Remaining: \$${c.remainingDebt.toStringAsFixed(2)}',
+                                'Remaining: ${c.remainingDebt.toStringAsFixed(2)} Birr',
                                 style: const TextStyle(color: Colors.red),
                               ),
                           ],
@@ -469,7 +469,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ...memberPayments.map(
                       (p) => ListTile(
                         dense: true,
-                        title: Text('\$${p.amount.toStringAsFixed(2)}'),
+                                                    title: Text('${p.amount.toStringAsFixed(2)} Birr'),
                         subtitle: Text(
                           'Date: ${p.date.toLocal().toString().split(' ')[0]}',
                         ),
@@ -533,7 +533,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           children: [
                             const Text('Total Capital'),
                             Text(
-                              '\$${_stats!.totalCapital.toStringAsFixed(2)}',
+                              '${_stats!.totalCapital.toStringAsFixed(2)} Birr',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -568,7 +568,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           children: [
                             const Text('Total Savings'),
                             Text(
-                              '\$${_stats!.totalSavings.toStringAsFixed(2)}',
+                              '${_stats!.totalSavings.toStringAsFixed(2)} Birr',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -583,7 +583,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           children: [
                             const Text('Total Credits'),
                             Text(
-                              '\$${_stats!.totalCredits.toStringAsFixed(2)}',
+                              '${_stats!.totalCredits.toStringAsFixed(2)} Birr',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -726,7 +726,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ? Colors.red
                           : Colors.orange,
                 ),
-                title: Text('\$${savings.amount.toStringAsFixed(2)}'),
+                                            title: Text('${savings.amount.toStringAsFixed(2)} Birr'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -811,7 +811,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ? Colors.red
                           : Colors.orange,
                 ),
-                title: Text('\$${credit.amount.toStringAsFixed(2)}'),
+                                            title: Text('${credit.amount.toStringAsFixed(2)} Birr'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -821,7 +821,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     if (credit.status == 'approved')
                       Text(
-                        'Remaining: \$${credit.remainingDebt.toStringAsFixed(2)}',
+                                                      'Remaining: ${credit.remainingDebt.toStringAsFixed(2)} Birr',
                         style: const TextStyle(color: Colors.red),
                       ),
                   ],
@@ -901,7 +901,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ? Colors.red
                           : Colors.orange,
                 ),
-                title: Text('\$${payment.amount.toStringAsFixed(2)}'),
+                                            title: Text('${payment.amount.toStringAsFixed(2)} Birr'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

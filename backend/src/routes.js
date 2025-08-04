@@ -73,6 +73,8 @@ router.post('/savings', async (req, res) => {
 router.post('/credits', async (req, res) => {
   const { userId, amount, date } = req.body;
   try {
+    console.log('Credit request - User ID:', userId, 'Amount:', amount);
+    
     // Calculate member's total approved savings
     const totalSavings = await Savings.aggregate([
       { $match: { user: userId, status: 'approved' } },
@@ -80,6 +82,8 @@ router.post('/credits', async (req, res) => {
     ]);
     const savingsAmount = totalSavings[0]?.total || 0;
     const maxCreditAllowed = savingsAmount * 2;
+
+    console.log('Credit validation - Savings amount:', savingsAmount, 'Max allowed:', maxCreditAllowed);
 
     // Allow credit request even if no savings yet (for new members)
     if (savingsAmount === 0) {
@@ -92,7 +96,7 @@ router.post('/credits', async (req, res) => {
     if (amount > maxCreditAllowed) {
       return res.status(400).json({ 
         error: 'Credit amount exceeds limit', 
-        details: `Maximum credit allowed is $${maxCreditAllowed} (2x your total savings of $${savingsAmount})` 
+        details: `Maximum credit allowed is ${maxCreditAllowed} Birr (2x your total savings of ${savingsAmount} Birr)` 
       });
     }
 
@@ -103,16 +107,51 @@ router.post('/credits', async (req, res) => {
       date 
     });
     await credit.save();
+    console.log('Credit created successfully:', credit._id);
     res.status(201).json({ credit });
   } catch (err) {
+    console.log('Credit creation error:', err.message);
     res.status(400).json({ error: 'Add credit failed', details: err.message });
   }
 });
 
-// Member: Add payment request
+// Member: Add payment request with validation
 router.post('/payments', async (req, res) => {
   const { userId, amount, date } = req.body;
   try {
+    // Calculate total approved credits for this user
+    const totalCredits = await Credit.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalCreditAmount = totalCredits[0]?.total || 0;
+
+    // Calculate total approved payments for this user
+    const totalPayments = await Payment.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalPaidAmount = totalPayments[0]?.total || 0;
+
+    // Calculate remaining debt
+    const remainingDebt = totalCreditAmount - totalPaidAmount;
+
+    // Check if payment amount exceeds remaining debt
+    if (amount > remainingDebt) {
+      return res.status(400).json({ 
+        error: 'Payment amount exceeds remaining debt', 
+        details: `You can only pay up to ${remainingDebt.toFixed(2)} Birr. Your total credit is ${totalCreditAmount.toFixed(2)} Birr and you have already paid ${totalPaidAmount.toFixed(2)} Birr.` 
+      });
+    }
+
+    // Check if there's no remaining debt
+    if (remainingDebt <= 0) {
+      return res.status(400).json({ 
+        error: 'No remaining debt', 
+        details: 'You have no remaining debt to pay. Your total credit is ' + totalCreditAmount.toFixed(2) + ' Birr and you have already paid ' + totalPaidAmount.toFixed(2) + ' Birr.' 
+      });
+    }
+
     const payment = new Payment({ user: userId, amount, date });
     await payment.save();
     res.status(201).json({ payment });
@@ -228,6 +267,7 @@ router.post('/admin/approve-payment', async (req, res) => {
     }
 
     console.log('Payment approved successfully:', payment._id);
+    console.log('Total credits:', totalCredits, 'Total paid:', totalPaid, 'Remaining debt:', remainingDebt);
     res.json({ success: true, payment });
   } catch (err) {
     res.status(500).json({ error: 'Payment approval failed', details: err.message });
@@ -321,6 +361,56 @@ router.get('/all-members', async (req, res) => {
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: 'Fetch failed', details: err.message });
+  }
+});
+
+// Debug: Get user financial status
+router.get('/debug/user-status/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Get user info
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Get total approved savings
+    const totalSavings = await Savings.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const savingsAmount = totalSavings[0]?.total || 0;
+    
+    // Get total approved credits
+    const totalCredits = await Credit.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const creditAmount = totalCredits[0]?.total || 0;
+    
+    // Get total approved payments
+    const totalPayments = await Payment.aggregate([
+      { $match: { user: userId, status: 'approved' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const paymentAmount = totalPayments[0]?.total || 0;
+    
+    // Calculate remaining debt
+    const remainingDebt = creditAmount - paymentAmount;
+    const maxCreditAllowed = savingsAmount * 2;
+    
+    res.json({
+      user: { id: user._id, name: user.name, email: user.email, status: user.status },
+      financialStatus: {
+        totalApprovedSavings: savingsAmount,
+        totalApprovedCredits: creditAmount,
+        totalApprovedPayments: paymentAmount,
+        remainingDebt: remainingDebt,
+        maxCreditAllowed: maxCreditAllowed,
+        canRequestCredit: savingsAmount > 0 && remainingDebt < maxCreditAllowed
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Debug failed', details: err.message });
   }
 });
 
