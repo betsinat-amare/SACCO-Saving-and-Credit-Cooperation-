@@ -81,6 +81,14 @@ router.post('/credits', async (req, res) => {
     const savingsAmount = totalSavings[0]?.total || 0;
     const maxCreditAllowed = savingsAmount * 2;
 
+    // Allow credit request even if no savings yet (for new members)
+    if (savingsAmount === 0) {
+      return res.status(400).json({ 
+        error: 'No approved savings found', 
+        details: 'You need to have approved savings before requesting credit. Please add savings first and wait for admin approval.' 
+      });
+    }
+
     if (amount > maxCreditAllowed) {
       return res.status(400).json({ 
         error: 'Credit amount exceeds limit', 
@@ -195,6 +203,7 @@ router.post('/admin/reject-credit', async (req, res) => {
 router.post('/admin/approve-payment', async (req, res) => {
   const { paymentId } = req.body;
   try {
+    console.log('Approving payment:', paymentId);
     const payment = await Payment.findByIdAndUpdate(paymentId, { status: 'approved' }, { new: true });
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
 
@@ -218,7 +227,8 @@ router.post('/admin/approve-payment', async (req, res) => {
       await Credit.findByIdAndUpdate(credit._id, { remaining_debt: creditRemainingDebt });
     }
 
-    res.json({ payment });
+    console.log('Payment approved successfully:', payment._id);
+    res.json({ success: true, payment });
   } catch (err) {
     res.status(500).json({ error: 'Payment approval failed', details: err.message });
   }
