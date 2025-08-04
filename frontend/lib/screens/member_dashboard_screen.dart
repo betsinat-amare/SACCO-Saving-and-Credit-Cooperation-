@@ -438,9 +438,15 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     final totalCredits = _credits
         .where((c) => c.status == 'approved')
         .fold<double>(0, (sum, c) => sum + c.amount);
-    final totalRemainingDebt = _credits
+    // Calculate total remaining debt more accurately
+    final totalApprovedCredits = _credits
         .where((c) => c.status == 'approved')
-        .fold<double>(0, (sum, c) => sum + c.remainingDebt);
+        .fold<double>(0, (sum, c) => sum + c.amount);
+    final totalApprovedPayments = _payments
+        .where((p) => p.status == 'approved')
+        .fold<double>(0, (sum, p) => sum + p.amount);
+    final totalRemainingDebt = (totalApprovedCredits - totalApprovedPayments)
+        .clamp(0.0, double.infinity);
     final totalPaidPayments = _payments
         .where((p) => p.status == 'approved')
         .fold<double>(0, (sum, p) => sum + p.amount);
@@ -713,10 +719,14 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                             leading: Icon(
                               s.status == 'approved'
                                   ? Icons.check_circle
+                                  : s.status == 'rejected'
+                                  ? Icons.cancel
                                   : Icons.pending,
                               color:
                                   s.status == 'approved'
                                       ? Colors.green
+                                      : s.status == 'rejected'
+                                      ? Colors.red
                                       : Colors.orange,
                             ),
                             title: Text('\$${s.amount.toStringAsFixed(2)}'),
@@ -732,6 +742,8 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                 color:
                                     s.status == 'approved'
                                         ? Colors.green
+                                        : s.status == 'rejected'
+                                        ? Colors.red
                                         : Colors.orange,
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -775,10 +787,14 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                             leading: Icon(
                               c.status == 'approved'
                                   ? Icons.check_circle
+                                  : c.status == 'rejected'
+                                  ? Icons.cancel
                                   : Icons.pending,
                               color:
                                   c.status == 'approved'
                                       ? Colors.green
+                                      : c.status == 'rejected'
+                                      ? Colors.red
                                       : Colors.orange,
                             ),
                             title: Text('\$${c.amount.toStringAsFixed(2)}'),
@@ -804,6 +820,8 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                 color:
                                     c.status == 'approved'
                                         ? Colors.green
+                                        : c.status == 'rejected'
+                                        ? Colors.red
                                         : Colors.orange,
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -847,10 +865,14 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                             leading: Icon(
                               p.status == 'approved'
                                   ? Icons.check_circle
+                                  : p.status == 'rejected'
+                                  ? Icons.cancel
                                   : Icons.pending,
                               color:
                                   p.status == 'approved'
                                       ? Colors.green
+                                      : p.status == 'rejected'
+                                      ? Colors.red
                                       : Colors.orange,
                             ),
                             title: Text('\$${p.amount.toStringAsFixed(2)}'),
@@ -866,6 +888,8 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                                 color:
                                     p.status == 'approved'
                                         ? Colors.green
+                                        : p.status == 'rejected'
+                                        ? Colors.red
                                         : Colors.orange,
                                 borderRadius: BorderRadius.circular(12),
                               ),

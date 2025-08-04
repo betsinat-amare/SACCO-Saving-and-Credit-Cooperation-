@@ -200,17 +200,22 @@ router.post('/admin/approve-payment', async (req, res) => {
 
     // Update remaining debt for all approved credits of this user
     const userCredits = await Credit.find({ user: payment.user, status: 'approved' });
-    let totalPaid = 0;
     
     // Calculate total approved payments for this user
     const approvedPayments = await Payment.find({ user: payment.user, status: 'approved' });
-    totalPaid = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPaid = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
 
-    // Update remaining debt for each credit
+    // Calculate total approved credits for this user
+    const totalCredits = userCredits.reduce((sum, c) => sum + c.amount, 0);
+    
+    // Calculate remaining debt (total credits - total paid)
+    const remainingDebt = Math.max(0, totalCredits - totalPaid);
+
+    // Update remaining debt for each credit proportionally
     for (const credit of userCredits) {
-      const originalAmount = credit.amount;
-      const remainingDebt = Math.max(0, originalAmount - (totalPaid - (originalAmount - credit.remaining_debt)));
-      await Credit.findByIdAndUpdate(credit._id, { remaining_debt: remainingDebt });
+      const creditProportion = credit.amount / totalCredits;
+      const creditRemainingDebt = remainingDebt * creditProportion;
+      await Credit.findByIdAndUpdate(credit._id, { remaining_debt: creditRemainingDebt });
     }
 
     res.json({ payment });
