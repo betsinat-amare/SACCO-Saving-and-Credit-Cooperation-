@@ -5,8 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   // For physical device testing, use your PC's IP address
   // For emulator testing, use 10.0.2.2
-  static String baseUrl =
-      dotenv.env['API_URL'] ?? 'http://192.168.1.7:5000/api';
+  static String baseUrl = dotenv.env['API_URL'] ?? 'http://127.0.0.1:5000/api';
 
   static Future<http.Response> register(
     String name,

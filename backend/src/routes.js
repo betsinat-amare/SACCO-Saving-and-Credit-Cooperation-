@@ -1,6 +1,7 @@
 const express = require('express');
 const { User, Savings, Credit, Payment, CooperativeStats } = require('./models');
 const { signToken, hashPassword, comparePassword } = require('./auth');
+const mongoose = require('mongoose');
 
 const router = express.Router();
 
@@ -61,23 +62,22 @@ router.post('/admin/reject-member', async (req, res) => {
 router.post('/savings', async (req, res) => {
   const { userId, amount, date } = req.body;
   try {
-    const savings = new Savings({ user: userId, amount, date });
+    const savings = new Savings({ user: mongoose.Types.ObjectId(userId), amount, date });
     await savings.save();
     res.status(201).json({ savings });
   } catch (err) {
     res.status(400).json({ error: 'Add savings failed', details: err.message });
   }
 });
-
 // Member: Add credit with validation
 router.post('/credits', async (req, res) => {
   const { userId, amount, date } = req.body;
   try {
     console.log('Credit request - User ID:', userId, 'Amount:', amount);
-    
-    // Calculate member's total approved savings
+
+    // Convert userId to ObjectId for aggregation match
     const totalSavings = await Savings.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const savingsAmount = totalSavings[0]?.total || 0;
@@ -85,26 +85,25 @@ router.post('/credits', async (req, res) => {
 
     console.log('Credit validation - Savings amount:', savingsAmount, 'Max allowed:', maxCreditAllowed);
 
-    // Allow credit request even if no savings yet (for new members)
     if (savingsAmount === 0) {
-      return res.status(400).json({ 
-        error: 'No approved savings found', 
-        details: 'You need to have approved savings before requesting credit. Please add savings first and wait for admin approval.' 
+      return res.status(400).json({
+        error: 'No approved savings found',
+        details: 'You need to have approved savings before requesting credit. Please add savings first and wait for admin approval.'
       });
     }
 
     if (amount > maxCreditAllowed) {
-      return res.status(400).json({ 
-        error: 'Credit amount exceeds limit', 
-        details: `Maximum credit allowed is ${maxCreditAllowed} Birr (2x your total savings of ${savingsAmount} Birr)` 
+      return res.status(400).json({
+        error: 'Credit amount exceeds limit',
+        details: `Maximum credit allowed is ${maxCreditAllowed} Birr (2x your total savings of ${savingsAmount} Birr)`
       });
     }
 
-    const credit = new Credit({ 
-      user: userId, 
-      amount, 
-      remaining_debt: amount, // Initially, remaining debt equals credit amount
-      date 
+    const credit = new Credit({
+      user: userId,
+      amount,
+      remaining_debt: amount,
+      date
     });
     await credit.save();
     console.log('Credit created successfully:', credit._id);
@@ -121,14 +120,14 @@ router.post('/payments', async (req, res) => {
   try {
     // Calculate total approved credits for this user
     const totalCredits = await Credit.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const totalCreditAmount = totalCredits[0]?.total || 0;
 
     // Calculate total approved payments for this user
     const totalPayments = await Payment.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const totalPaidAmount = totalPayments[0]?.total || 0;
@@ -163,7 +162,7 @@ router.post('/payments', async (req, res) => {
 // Member: View own savings
 router.get('/savings/:userId', async (req, res) => {
   try {
-    const savings = await Savings.find({ user: req.params.userId });
+    const savings = await Savings.find({ user: mongoose.Types.ObjectId(req.params.userId) });
     res.json({ savings });
   } catch (err) {
     res.status(500).json({ error: 'Fetch savings failed', details: err.message });
@@ -173,7 +172,7 @@ router.get('/savings/:userId', async (req, res) => {
 // Member: View own credits
 router.get('/credits/:userId', async (req, res) => {
   try {
-    const credits = await Credit.find({ user: req.params.userId });
+    const credits = await Credit.find({ user: mongoose.Types.ObjectId(req.params.userId) });
     res.json({ credits });
   } catch (err) {
     res.status(500).json({ error: 'Fetch credits failed', details: err.message });
@@ -183,7 +182,7 @@ router.get('/credits/:userId', async (req, res) => {
 // Member: View own payments
 router.get('/payments/:userId', async (req, res) => {
   try {
-    const payments = await Payment.find({ user: req.params.userId });
+    const payments = await Payment.find({ user: mongoose.Types.ObjectId(req.params.userId) });
     res.json({ payments });
   } catch (err) {
     res.status(500).json({ error: 'Fetch payments failed', details: err.message });
@@ -375,21 +374,21 @@ router.get('/debug/user-status/:userId', async (req, res) => {
     
     // Get total approved savings
     const totalSavings = await Savings.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const savingsAmount = totalSavings[0]?.total || 0;
     
     // Get total approved credits
     const totalCredits = await Credit.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const creditAmount = totalCredits[0]?.total || 0;
     
     // Get total approved payments
     const totalPayments = await Payment.aggregate([
-      { $match: { user: userId, status: 'approved' } },
+      { $match: { user: mongoose.Types.ObjectId(userId), status: 'approved' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const paymentAmount = totalPayments[0]?.total || 0;
@@ -443,4 +442,4 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;

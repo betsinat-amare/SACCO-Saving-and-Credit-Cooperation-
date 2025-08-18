@@ -432,28 +432,41 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalSavings = _savings
-        .where((s) => s.status == 'approved')
-        .fold<double>(0, (sum, s) => sum + s.amount);
-    final totalCredits = _credits
-        .where((c) => c.status == 'approved')
-        .fold<double>(0, (sum, c) => sum + c.amount);
-    // Calculate total remaining debt more accurately
-    final totalApprovedCredits = _credits
-        .where((c) => c.status == 'approved')
-        .fold<double>(0, (sum, c) => sum + c.amount);
-    final totalApprovedPayments = _payments
-        .where((p) => p.status == 'approved')
-        .fold<double>(0, (sum, p) => sum + p.amount);
-    final totalRemainingDebt = (totalApprovedCredits - totalApprovedPayments)
-        .clamp(0.0, double.infinity);
-    final totalPaidPayments = _payments
-        .where((p) => p.status == 'approved')
-        .fold<double>(0, (sum, p) => sum + p.amount);
-    final pendingSavings = _savings.where((s) => s.status == 'pending').length;
-    final pendingCredits = _credits.where((c) => c.status == 'pending').length;
-    final pendingPayments =
-        _payments.where((p) => p.status == 'pending').length;
+    bool isApproved(String status) => status.toLowerCase().trim() == 'approved';
+    bool isPending(String status) => status.toLowerCase().trim() == 'pending';
+
+    // ======== Savings ========
+    final approvedSavings =
+        _savings.where((s) => isApproved(s.status)).toList();
+    final pendingSavings = _savings.where((s) => isPending(s.status)).length;
+    final totalSavings = approvedSavings.fold<double>(
+      0,
+      (sum, s) => sum + s.amount,
+    );
+
+    // ======== Credits ========
+    final approvedCredits =
+        _credits.where((c) => isApproved(c.status)).toList();
+    final pendingCredits = _credits.where((c) => isPending(c.status)).length;
+    final totalCredits = approvedCredits.fold<double>(
+      0,
+      (sum, c) => sum + c.amount,
+    );
+
+    // ======== Payments ========
+    final approvedPayments =
+        _payments.where((p) => isApproved(p.status)).toList();
+    final pendingPayments = _payments.where((p) => isPending(p.status)).length;
+    final totalPaidPayments = approvedPayments.fold<double>(
+      0,
+      (sum, p) => sum + p.amount,
+    );
+
+    // ======== Debt ========
+    final totalRemainingDebt = (totalCredits - totalPaidPayments).clamp(
+      0.0,
+      double.infinity,
+    );
 
     return Scaffold(
       appBar: AppBar(
