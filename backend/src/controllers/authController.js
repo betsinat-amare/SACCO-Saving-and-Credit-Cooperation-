@@ -2,6 +2,7 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// User registration
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -15,6 +16,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
+// User login
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -29,6 +31,20 @@ exports.login = async (req, res, next) => {
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
     res.json({ token, user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Admin approves or updates a user's status
+exports.updateUserStatus = async (req, res, next) => {
+  try {
+    const { userId, approved } = req.body; // admin sends userId and approved status
+    const user = await User.findByIdAndUpdate(userId, { approved }, { new: true });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User status updated", user });
   } catch (err) {
     next(err);
   }

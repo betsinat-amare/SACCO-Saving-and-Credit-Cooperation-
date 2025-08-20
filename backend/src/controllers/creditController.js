@@ -1,5 +1,5 @@
-const Credit = require("../models/Credit");
-const Saving = require("../models/Saving");
+const Credit = require("../models/credits");
+const Saving = require("../models/savings");
 
 exports.requestCredit = async (req, res) => {
   try {

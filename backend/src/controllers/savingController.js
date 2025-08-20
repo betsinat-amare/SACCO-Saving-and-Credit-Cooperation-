@@ -1,4 +1,4 @@
-const Saving = require("../models/Saving");
+const Saving = require("../models/savings");
 
 // Member requests a saving
 exports.addSaving = async (req, res) => {

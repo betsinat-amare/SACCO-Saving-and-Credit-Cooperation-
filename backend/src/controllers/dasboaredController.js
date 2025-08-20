@@ -1,5 +1,5 @@
-const Saving = require("../models/Saving");
-const Credit = require("../models/Credit");
+const Saving = require("../models/savings");
+const Credit = require("../models/credits");
 const Payment = require("../models/payment");
 
 exports.getUserDashboard = async (req, res) => {

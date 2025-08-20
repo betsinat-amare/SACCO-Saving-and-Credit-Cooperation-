@@ -1,5 +1,5 @@
 const Payment = require("../models/payment");
-const Credit = require("../models/Credit");
+const Credit = require("../models/credits");
 
 exports.makePayment = async (req, res) => {
   try {

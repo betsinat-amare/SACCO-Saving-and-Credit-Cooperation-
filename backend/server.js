@@ -10,11 +10,11 @@ const app = express();
 app.use(express.json());
 
 // Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/savings", require("./routes/savingRoutes"));
-app.use("/api/credits", require("./routes/creditRoutes"));
-app.use("/api/payments", require("./routes/paymentRoutes"));
-app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/auth", require("./src/routes/authRoutes"));
+app.use("/api/savings", require("./src/routes/savingRoutes"));
+app.use("/api/credits", require("./src/routes/creditRoutes"));
+app.use("/api/payments", require("./src/routes/paymentRoutes"));
+app.use("/api/dashboard", require("./src/routes/dashboaredRoutes"));
 
 // Error handler
 app.use(errorHandler);
