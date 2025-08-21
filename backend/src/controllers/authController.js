@@ -12,6 +12,10 @@ exports.register = async (req, res, next) => {
 
     res.json({ message: "User registered, waiting for admin approval", userId: user._id });
   } catch (err) {
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.email) {
+      // Duplicate email error
+      return res.status(400).json({ message: "Email already registered" });
+    }
     next(err);
   }
 };

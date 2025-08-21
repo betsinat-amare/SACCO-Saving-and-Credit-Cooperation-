@@ -13,7 +13,7 @@ class ApiService {
     String password,
   ) async {
     return await http.post(
-      Uri.parse('$baseUrl/register'),
+      Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name, 'email': email, 'password': password}),
     );
@@ -21,7 +21,7 @@ class ApiService {
 
   static Future<http.Response> login(String email, String password) async {
     return await http.post(
-      Uri.parse('$baseUrl/login'),
+      Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );
