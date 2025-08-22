@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   role: { type: String, enum: ["member", "admin"], default: "member" },
-  approved: { type: Boolean, default: false } // Admin must approve
+  status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);
